@@ -1,0 +1,41 @@
+
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+prefs = {
+    "hardware.audio_capture_enabled": True,
+    "hardware.video_capture_enabled": True,
+    "hardware.audio_capture_allowed_urls": ["https://app.chime.aws"],
+    "hardware.video_capture_allowed_urls": ["https://app.chime.aws"]
+}
+
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+import time
+options = Options()
+options.page_load_strategy = 'normal'
+options.add_experimental_option("prefs", prefs)
+
+driver = webdriver.Chrome(options=options)
+
+## open selenium URL in chrome browser
+url = f"https://www.youtube.com/watch?v=pkxii0ASua8"
+driver.get(url)
+
+l = driver.find_element(By.ID, "enabled-button")
+l.click()
+
+import soundcard as sc
+import soundfile as sf
+
+OUTPUT_FILE_NAME = "out.wav"  # file name.
+SAMPLE_RATE = 48000  # [Hz]. sampling rate.
+RECORD_SEC = 60  # [sec]. duration recording audio.
+
+with sc.get_microphone(id=str(sc.default_speaker().name), include_loopback=True).recorder(samplerate=SAMPLE_RATE) as mic:
+    # record audio with loopback from default speaker.
+    data = mic.record(numframes=SAMPLE_RATE * RECORD_SEC)
+
+    # change "data=data[:, 0]" to "data=data", if you would like to write audio as multiple-channels.
+    sf.write(file=OUTPUT_FILE_NAME, data=data[:, 0], samplerate=SAMPLE_RATE)
